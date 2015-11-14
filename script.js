@@ -1295,6 +1295,7 @@ Thread: {
 				for(var no in refobj)
 				{
 					var o = refobj[no] = StringUtil.splitResNumbers(refobj[no]);
+					if(!o) continue;
 					for(var i = 0, j = o.length; i < j; i++)
 					{
 						this._addEntry(replyFrom, o[i], parseInt(no));
@@ -1454,7 +1455,7 @@ Thread: {
 					if (a.className == "resPointer")
 					{
 						linkto = StringUtil.splitResNumbers(a.textContent);
-						this._addSuggest("ref", linkto, no);
+						if(!!linkto) this._addSuggest("ref", linkto, no);
 					}
 					for (var key in this._noticePtnReg)
 					{
@@ -3091,11 +3092,23 @@ Util: {
 			var e=str.split(",");
 			var r=new Array();
 			for(var i=0;i<e.length;i++){
-				if(e[i].match(/(\d+)-(\d+)/)){
-					for(var j=parseInt(RegExp.$1);j <= parseInt(RegExp.$2);j++){
+				if(e[i].match(/(\d{1,4})-(\d{1,4})(?!\d)/)){
+					var st=parseInt(RegExp.$1);
+					var en=parseInt(RegExp.$2);
+					if(st>en){
+						[st,en]=[en,st];
+					}
+					if(st<1) st=1;
+					if(Skin.Thread.Info.Total<st) return;
+					if(Skin.Thread.Info.Total<en) en=Skin.Thread.Info.Total;
+					for(var j=st;j <= en;j++){
 						r.push(j);
 					}
-				}else if(!isNaN(parseInt(e[i])))r.push(parseInt(e[i]));
+				}else if(e[i].match(/(\d{1,4})(?!\d)/)){
+					var n=parseInt(RegExp.$1);
+					if(n<1 || 9999<n) break;
+					r.push(n);
+				}
 			}
 			return r;
 		},
@@ -4980,6 +4993,7 @@ ResPopup.prototype = new Popup();
 		if (obj.tagName)
 		{	//要素。アンカーだと信じる
 			ids = StringUtil.splitResNumbers(obj.textContent);
+			if(!ids) return;
 			Skin.Thread.Message.prepare(obj.textContent);
 			this.container.dataset.popupCaption = (caption||"") + obj.textContent;
 		}
